@@ -282,11 +282,6 @@ pub struct AppSettings {
     /// unidentified pointer targets use focus.
     #[serde(default)]
     pub mouse_profile_target: MouseProfileTarget,
-    /// Restore the native firmware platform on compatible keyboards after
-    /// appearance, reconnect, or resume. Opt-in to preserve intentional layouts.
-    /// Appended last because this struct crosses the IPC wire positionally.
-    #[serde(default)]
-    pub enforce_native_keyboard_platform: bool,
 }
 
 const SENSITIVITY_MIN: u8 = 1;
@@ -489,7 +484,6 @@ impl Default for AppSettings {
             theme_dark: None,
             ui_radius: None,
             mouse_profile_target: MouseProfileTarget::Pointer,
-            enforce_native_keyboard_platform: false,
         }
     }
 }
@@ -735,8 +729,9 @@ pub struct SmartShift {
     /// below [`SMARTSHIFT_MIN_AUTO_DISENGAGE`] is rejected on load.
     #[serde(deserialize_with = "deserialize_auto_disengage")]
     pub auto_disengage: SmartShiftAutoDisengage,
-    /// Firmware tunable-torque level (`1`–`255`), `0` when the device does not
-    /// expose tunable torque. HID++ defines the full non-zero byte range.
+    /// Tunable-torque level in percent of the wheel's maximum force
+    /// (`1`–`100`), `0` when the device reports no torque level. A persisted
+    /// value above `100` is rejected on load.
     #[serde(with = "crate::hid::smartshift::optional_tunable_torque")]
     pub tunable_torque: Option<TunableTorque>,
 }
@@ -802,7 +797,8 @@ mod tests {
         parse(minimum - 1, 50)
             .expect_err("auto_disengage below the persisted minimum must be rejected");
         parse(minimum, 50).expect("the minimum itself is in contract");
-        parse(0xff, 0xff).expect("the top of both ranges is in contract");
+        parse(0xff, 100).expect("the top of both ranges is in contract");
+        parse(minimum, 101).expect_err("torque above 100% must be rejected");
         assert_eq!(
             parse(minimum, 0)
                 .expect("zero torque represents unsupported hardware")

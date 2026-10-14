@@ -12,8 +12,6 @@ capture_mouse_events = true
 mouse_profile_target = "pointer"
 smooth_scroll = false
 vertical_scroll_sensitivity = 14
-# Opt in to restoring Windows/macOS/Linux keyboard mode after reconnects.
-enforce_native_keyboard_platform = false
 auto_download_assets = true
 asset_source = "automatic"
 language = "en"
@@ -34,8 +32,10 @@ scroll_resolution = "high"
 
 [devices."receiver:aabbccdd:slot:1".bindings]
 Back = "BrowserBack"
-Forward = "BrowserForward"
-# Hold the chord for exactly as long as the physical button is held.
+# Hold only the modifiers and tap the key once: the application switcher steps
+# one window forward and stays open until the button is released.
+Forward = { TapKeyHoldingModifiers = "Cmd+Tab" }
+# Hold the whole chord for exactly as long as the physical button is held.
 MiddleClick = { HoldShortcut = "Ctrl+Space" }
 # Release before 500 ms runs `short`; reaching 500 ms runs `long` once.
 DpiToggle = { short = "ShowDesktop", long = "MissionControl" }
